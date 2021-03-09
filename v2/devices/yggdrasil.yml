@@ -269,7 +269,7 @@ operating_systems:
                   file: "unpacked/sfe-yggdrasil/Sailfish_OS/lk-yggdrasil.img"
                   group: "SailfishOS"
       - actions:
-          - fastboot:continue:
+          - fastboot:reboot:
         fallback:
           - core:user_action:
               action: "boot"
