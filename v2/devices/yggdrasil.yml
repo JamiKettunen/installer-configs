@@ -248,7 +248,7 @@ operating_systems:
                 - url: "https://gitlab.com/sailfishos-porters-ci/yggdrasil-ci/-/jobs/artifacts/master/download?job=run-build-lvm"
       - actions:
           - core:download:
-              group: "VollaOS"
+              group: "SailfishOS"
               files:
                 - url: "https://volla.tech/filedump/vollaos-system.zip"
                   checksum:
@@ -265,7 +265,7 @@ operating_systems:
                   dir: "unpacked"
       - actions:
           - core:unpack:
-              group: "VollaOS"
+              group: "SailfishOS"
               files:
                 - archive: "vollaos-system.zip"
                   dir: "unpacked"
@@ -298,7 +298,7 @@ operating_systems:
               partitions:
                 - partition: "system"
                   file: "unpacked/system.img"
-                  group: "VollaOS"
+                  group: "SailfishOS"
         condition:
           var: "flash_vollaos_system"
           value: true
