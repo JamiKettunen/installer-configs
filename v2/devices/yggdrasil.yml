@@ -250,9 +250,9 @@ operating_systems:
           - core:download:
               group: "VollaOS"
               files:
-                - url: "https://dl.dropboxusercontent.com/s/ytsr1tuexdsoh0h/system.img"
+                - url: "https://volla.tech/filedump/vollaos-system.zip"
                   checksum:
-                    sum: "96cc3c2bd0de93b70b8075739706610301953161a948a61054fd9c08e9dddcd5"
+                    sum: "a9ec7f25aeead28654fc8b9bbd55bc18e83a63fe4bc967d2e307739de1faa694"
                     algorithm: "sha256"
         condition:
           var: "flash_vollaos_system"
@@ -263,6 +263,15 @@ operating_systems:
               files:
                 - archive: "download?job=run-build-lvm"
                   dir: "unpacked"
+      - actions:
+          - core:unpack:
+              group: "VollaOS"
+              files:
+                - archive: "vollaos-system.zip"
+                  dir: "unpacked"
+        condition:
+          var: "flash_vollaos_system"
+          value: true
       - actions:
           - adb:reboot:
               to_state: "bootloader"
@@ -288,7 +297,7 @@ operating_systems:
           - fastboot:flash:
               partitions:
                 - partition: "system"
-                  file: "system.img"
+                  file: "unpacked/system.img"
                   group: "VollaOS"
         condition:
           var: "flash_vollaos_system"
