@@ -183,14 +183,14 @@ operating_systems:
           - core:download:
               group: "firmware"
               files:
-                - url: "https://volla.tech/filedump/vollaos/volla-12.1-20240228-stable-BOOTSTRAP-mimameid.zip"
+                - url: "https://volla.tech/filedump/vollaos/volla-14.0-20250510-stable-BOOTSTRAP-mimameid.zip"
                   checksum:
-                    sum: "f864eddaf65ed58b608f359c45eb7feb01b1dd62c270b0ec5ea3eb79e94b30f6"
+                    sum: "4ca5445f76767a13a21ba823deb02b8936fd77ef20e78e5f66dee328130ec3b9"
                     algorithm: "sha256"
           - core:unpack:
               group: "firmware"
               files:
-                - archive: "volla-12.1-20240228-stable-BOOTSTRAP-mimameid.zip"
+                - archive: "volla-14.0-20250510-stable-BOOTSTRAP-mimameid.zip"
                   dir: "unpacked"
       - actions:
           - adb:reboot:
