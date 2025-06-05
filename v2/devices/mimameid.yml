@@ -5,17 +5,13 @@ aliases: []
 user_actions:
   recovery:
     title: "Reboot to Recovery"
-    description: 'With the device powered off, hold Volume Down + Power. You might be prompted to select a mode to boot into. If that happens, follow the on-screen instructions and select "Recovery" mode.'
+    description: 'With the device powered off, hold Volume Up + Power. When prompted to choose a boot mode use Volume Up/Down to select "recovery" and confirm with Power button.'
     image: "phone_power_up"
     button: true
   bootloader:
     title: "Reboot to Bootloader"
-    description: 'With the device powered off, hold Volume Up + Power. You might be prompted to select a mode to boot into. If that happens, follow the on-screen instructions and select "Fastboot" mode.'
+    description: 'With the device powered off, hold Volume Up + Power. When prompted to choose a boot mode use Volume Up/Down to select "fastboot" and confirm with Power button.'
     image: "phone_power_up"
-    button: true
-  boot:
-    title: "Reboot the device"
-    description: "Hold down the power button until the device powers down. Then, release it briefly and hold it down again until the device boots."
     button: true
   display_notice:
     title: "Replacement Display Notice"
@@ -23,7 +19,7 @@ user_actions:
     button: true
   sfos_notice:
     title: "SailfishOS: Notice"
-    description: "For additional information about the Volla device ports including known issues please visit the following URL."
+    description: "Initial boot after installation when coming from non-SailfishOS will wipe userdata for use as /home. For additional information about the Volla device ports including known issues please visit the following URL."
     link: "https://forum.sailfishos.org/t/the-single-volla-thread/22553"
     button: true
   droidian_notice:
@@ -49,7 +45,7 @@ operating_systems:
           systemimage:channels:
       - var: "wipe"
         name: "Wipe Userdata"
-        tooltip: "Wipe personal data. *Required* if switching from Volla OS."
+        tooltip: "Wipe personal data. *Required* if switching from something that isn't Ubuntu Touch."
         type: "checkbox"
       - var: "bootstrap"
         name: "Bootstrap"
@@ -70,10 +66,6 @@ operating_systems:
                   checksum:
                     sum: "a1fb6b27e3f693c7155e6a64dfdc58d00198921ffe04040aac4a124a657acd05"
                     algorithm: "sha256"
-        condition:
-          var: "bootstrap"
-          value: true
-      - actions:
           - core:unpack:
               group: "firmware"
               files:
@@ -83,21 +75,21 @@ operating_systems:
           var: "bootstrap"
           value: true
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
         condition:
-          var: "bootstrap"
-          value: true
+          OR:
+            - var: "bootstrap"
+              value: true
+            - var: "wipe"
+              value: true
       - actions:
           - fastboot:set_active:
               slot: "a"
-        condition:
-          var: "bootstrap"
-          value: true
-      - actions:
           - fastboot:flash:
               partitions:
                 - partition: "boot_a"
@@ -159,12 +151,16 @@ operating_systems:
           - core:user_action:
               action: "recovery"
         condition:
-          var: "bootstrap"
-          value: true
+          OR:
+            - var: "bootstrap"
+              value: true
+            - var: "wipe"
+              value: true
       - actions:
-          - adb:reboot:
-              to_state: "recovery"
-        fallback:
+# FIXME: bring below back once "adb reboot recovery" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "recovery"
+#        fallback:
           - core:user_action:
               action: "recovery"
         condition:
@@ -191,7 +187,6 @@ operating_systems:
                   checksum:
                     sum: "f864eddaf65ed58b608f359c45eb7feb01b1dd62c270b0ec5ea3eb79e94b30f6"
                     algorithm: "sha256"
-      - actions:
           - core:unpack:
               group: "firmware"
               files:
@@ -251,17 +246,11 @@ operating_systems:
                 - partition: "vbmeta_vendor"
                   file: "unpacked/vbmeta_vendor.img"
                   group: "firmware"
-      - actions:
           - fastboot:erase:
               partition: "userdata"
-      - actions:
           - fastboot:erase:
               partition: "nvdata"
-      - actions:
           - fastboot:reboot:
-        fallback:
-          - core:user_action:
-              action: "boot"
     slideshow: []
     eula:
       title: "EULA"
@@ -280,12 +269,10 @@ operating_systems:
       - actions:
           - core:user_action:
               action: "sfos_notice"
-      - actions:
           - core:download:
               group: "SailfishOS"
               files:
                 - url: "https://github.com/HelloVolla/sailfish-release-halium-mimameid/releases/latest/download/SailfishOS-halium-mimameid.7z"
-      - actions:
           - core:unpack:
               group: "SailfishOS"
               files:
@@ -301,10 +288,6 @@ operating_systems:
                   checksum:
                     sum: "bfcac4a2722bb01eb911d1daf9c9b50c246f5cb8e85cfa1aaaed5701d20bcc2c"
                     algorithm: "sha256"
-        condition:
-          var: "bootstrap"
-          value: true
-      - actions:
           - core:unpack:
               group: "firmware"
               files:
@@ -319,16 +302,9 @@ operating_systems:
         fallback:
           - core:user_action:
               action: "bootloader"
-        condition:
-          var: "bootstrap"
-          value: true
       - actions:
           - fastboot:set_active:
               slot: "a"
-        condition:
-          var: "bootstrap"
-          value: true
-      - actions:
           - fastboot:flash:
               partitions:
                 - partition: "dtbo_a"
@@ -378,11 +354,7 @@ operating_systems:
                 - partition: "super"
                   file: "unpacked/SailfishOS-halium-mimameid/super.img"
                   group: "SailfishOS"
-      - actions:
           - fastboot:reboot:
-        fallback:
-          - core:user_action:
-              action: "boot"
     slideshow: []
   - name: "Droidian"
     compatible_installer: ">=0.9.2-beta"
