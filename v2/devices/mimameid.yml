@@ -5,12 +5,12 @@ aliases: []
 user_actions:
   recovery:
     title: "Reboot to Recovery"
-    description: 'With the device powered off, hold Volume Up + Power. When prompted to choose a boot mode use Volume Up/Down to select "recovery" and confirm with Power button.'
+    description: 'With the device powered off, hold Volume Up + Power. When prompted choose a boot mode using Volume Up/Down to select "recovery" and confirm with Power button.'
     image: "phone_power_up"
     button: true
   bootloader:
     title: "Reboot to Bootloader"
-    description: 'With the device powered off, hold Volume Up + Power. When prompted to choose a boot mode use Volume Up/Down to select "fastboot" and confirm with Power button.'
+    description: 'With the device powered off, hold Volume Up + Power. When prompted choose a boot mode using Volume Up/Down to select "fastboot" and confirm with Power button.'
     image: "phone_power_up"
     button: true
   display_notice:
@@ -193,9 +193,10 @@ operating_systems:
                 - archive: "volla-14.0-20250510-stable-BOOTSTRAP-mimameid.zip"
                   dir: "unpacked"
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
       - actions:
@@ -297,9 +298,10 @@ operating_systems:
           var: "bootstrap"
           value: true
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
       - actions:
@@ -397,9 +399,10 @@ operating_systems:
           var: "bootstrap"
           value: true
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
       - actions:

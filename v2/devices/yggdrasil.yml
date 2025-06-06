@@ -6,26 +6,22 @@ doppelgangers: []
 user_actions:
   recovery:
     title: "Reboot to Recovery"
-    description: 'With the device powered off, hold Volume Down + Power. You might be prompted to select a mode to boot into. If that happens, follow the on-screen instructions and select "Recovery" mode.'
+    description: 'With the device powered off, hold Volume Up + Power. When prompted choose a boot mode by following the on-screen instructions to select "Recovery" mode.'
     image: "phone_power_up"
     button: true
   bootloader:
     title: "Reboot to Bootloader"
-    description: 'With the device powered off, hold Volume Up + Power. You might be prompted to select a mode to boot into. If that happens, follow the on-screen instructions and select "Fastboot" mode.'
+    description: 'With the device powered off, hold Volume Up + Power. When prompted choose a boot mode by following the on-screen instructions to select "Fastboot" mode.'
     image: "phone_power_up"
-    button: true
-  boot:
-    title: "Reboot the device"
-    description: "Hold down the power button until the device powers down. Then, release it briefly and hold it down again until the device boots."
     button: true
   sfos_notice:
     title: "SailfishOS: Notice"
-    description: "For additional information about the Volla device ports including known issues please visit the following URL."
+    description: "Installation will reflash userdata with the fresh SailfishOS rootfs. For additional information about the Volla device ports including known issues please visit the following URL."
     link: "https://forum.sailfishos.org/t/the-single-volla-thread/22553"
     button: true
   droidian_notice:
     title: "Droidian: Notice"
-    description: "Installation will reflash userdata with the fresh Droidian rootfs (which the process of could look to be stuck taking about 16 minutes). For additional information about the port including known issues, default passcode and recommended apps please visit the following URL."
+    description: "Installation will reflash userdata with the fresh Droidian rootfs. For additional information about the port including known issues, default passcode and recommended apps please visit the following URL."
     link: "https://devices.droidian.org/#/devices/yggdrasil"
     button: true
   cutie_notice:
@@ -50,11 +46,11 @@ operating_systems:
           systemimage:channels:
       - var: "wipe"
         name: "Wipe Userdata"
-        tooltip: "Wipe personal data (required for new installs)"
+        tooltip: "Wipe personal data. *Required* if switching from something that isn't Ubuntu Touch."
         type: "checkbox"
       - var: "bootstrap"
         name: "Bootstrap"
-        tooltip: "Flash system partitions using fastboot"
+        tooltip: "Flash system partitions using fastboot. Do NOT uncheck unless you know exactly what you're doing!"
         type: "checkbox"
         value: true
     prerequisites: []
@@ -71,10 +67,6 @@ operating_systems:
                   checksum:
                     sum: "77bcf3842cc676c329afae433be0087bc71ac34001977ca1957f40b7a126c400"
                     algorithm: "sha256"
-        condition:
-          var: "bootstrap"
-          value: true
-      - actions:
           - core:unpack:
               group: "firmware"
               files:
@@ -84,14 +76,18 @@ operating_systems:
           var: "bootstrap"
           value: true
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
         condition:
-          var: "bootstrap"
-          value: true
+          OR:
+            - var: "bootstrap"
+              value: true
+            - var: "wipe"
+              value: true
       - actions:
           - fastboot:flash:
               partitions:
@@ -140,10 +136,6 @@ operating_systems:
                 - partition: "tee1"
                   file: "unpacked/tee.img"
                   group: "firmware"
-        condition:
-          var: "bootstrap"
-          value: true
-      - actions:
           - fastboot:erase:
               partition: "cache"
           - fastboot:erase:
@@ -151,24 +143,32 @@ operating_systems:
         condition:
           var: "bootstrap"
           value: true
+
+      # Optionally wipe userdata
       - actions:
           - fastboot:erase:
               partition: "userdata"
         condition:
           var: "wipe"
           value: true
+
+      # Reboot to UBports recovery to install UT
       - actions:
-          - fastboot:reboot:
+          - fastboot:reboot_recovery:
         fallback:
           - core:user_action:
-              action: "boot"
+              action: "recovery"
         condition:
-          var: "bootstrap"
-          value: true
+          OR:
+            - var: "bootstrap"
+              value: true
+            - var: "wipe"
+              value: true
       - actions:
-          - adb:reboot:
-              to_state: "recovery"
-        fallback:
+# FIXME: bring below back once "adb reboot recovery" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "recovery"
+#        fallback:
           - core:user_action:
               action: "recovery"
         condition:
@@ -195,16 +195,16 @@ operating_systems:
                   checksum:
                     sum: "3b337e12ef2d9dc95b1decfeaf0f1531da46a8ae6a765dd47c4c05aa73dd73c6"
                     algorithm: "sha256"
-      - actions:
           - core:unpack:
               group: "firmware"
               files:
                 - archive: "volla-12.1-20240228-stable-BOOTSTRAP-yggdrasil.zip"
                   dir: "unpacked"
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
       - actions:
@@ -258,17 +258,11 @@ operating_systems:
                 - partition: "vendor"
                   file: "unpacked/vendor.img"
                   group: "firmware"
-      - actions:
           - fastboot:erase:
               partition: "userdata"
-      - actions:
           - fastboot:erase:
               partition: "nvdata"
-      - actions:
           - fastboot:reboot:
-        fallback:
-          - core:user_action:
-              action: "boot"
     slideshow: []
     eula:
       title: "EULA"
@@ -287,11 +281,17 @@ operating_systems:
       - actions:
           - core:user_action:
               action: "sfos_notice"
-      - actions:
           - core:download:
               group: "SailfishOS"
               files:
                 - url: "https://gitlab.com/sailfishos-porters-ci/yggdrasil-ci/-/jobs/artifacts/master/download?job=run-build-lvm-testing"
+          - core:unpack:
+              group: "SailfishOS"
+              files:
+                - archive: "download?job=run-build-lvm-testing"
+                  dir: "unpacked"
+
+      # Firmware setup (bootstrap)
       - actions:
           - core:download:
               group: "firmware"
@@ -304,16 +304,6 @@ operating_systems:
                   checksum:
                     sum: "1e961421419ee7b92afc00b3e82f9bc1c553ac1a5d0d23d4218e51459f8b1490"
                     algorithm: "sha256"
-        condition:
-          var: "bootstrap"
-          value: true
-      - actions:
-          - core:unpack:
-              group: "SailfishOS"
-              files:
-                - archive: "download?job=run-build-lvm-testing"
-                  dir: "unpacked"
-      - actions:
           - core:unpack:
               group: "firmware"
               files:
@@ -325,9 +315,10 @@ operating_systems:
           var: "bootstrap"
           value: true
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
       - actions:
@@ -372,6 +363,7 @@ operating_systems:
         condition:
           var: "bootstrap"
           value: true
+
       - actions:
           - fastboot:flash:
               partitions:
@@ -390,11 +382,7 @@ operating_systems:
                 - partition: "userdata"
                   file: "unpacked/sfe-yggdrasil/Sailfish_OS/sailfish.img001"
                   group: "SailfishOS"
-      - actions:
           - fastboot:reboot:
-        fallback:
-          - core:user_action:
-              action: "boot"
     slideshow: []
   - name: "Droidian"
     compatible_installer: ">=0.9.2-beta"
@@ -465,9 +453,10 @@ operating_systems:
           var: "bootstrap"
           value: true
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
       - actions:
