@@ -191,14 +191,14 @@ operating_systems:
           - core:download:
               group: "firmware"
               files:
-                - url: "https://volla.tech/filedump/vollaos/volla-12.1-20240228-stable-BOOTSTRAP-yggdrasil.zip"
+                - url: "https://volla.tech/filedump/vollaos/volla-12.1-20241104-stable-BOOTSTRAP-yggdrasil.zip"
                   checksum:
-                    sum: "3b337e12ef2d9dc95b1decfeaf0f1531da46a8ae6a765dd47c4c05aa73dd73c6"
+                    sum: "ecbc5a437c66d2107f2b8f6a7d61f5b20c6621f0476a8fd261e2bce7d216343f"
                     algorithm: "sha256"
           - core:unpack:
               group: "firmware"
               files:
-                - archive: "volla-12.1-20240228-stable-BOOTSTRAP-yggdrasil.zip"
+                - archive: "volla-12.1-20241104-stable-BOOTSTRAP-yggdrasil.zip"
                   dir: "unpacked"
       - actions:
 # FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
