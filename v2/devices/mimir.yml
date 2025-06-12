@@ -277,6 +277,7 @@ operating_systems:
       title: "EULA"
       description: "To proceed with the installation you have to confirm that you have read and understood the End User License Agreement (EULA) of Volla Systeme GmbH for the Volla OS and agree to it."
       link: "https://volla.online/en/eula/index.html"
+
   - name: "Droidian"
     compatible_installer: ">=0.9.2-beta"
     options:
