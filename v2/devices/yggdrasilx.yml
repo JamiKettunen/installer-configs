@@ -24,6 +24,11 @@ user_actions:
     description: "For additional information about the Volla device ports including known issues please visit the following URL."
     link: "https://forum.sailfishos.org/t/the-single-volla-thread/22553"
     button: true
+  droidian_notice:
+    title: "Droidian: Notice"
+    description: "Installation will reflash userdata with the fresh Droidian rootfs. For additional information about the port including known issues, default passcode and recommended apps please visit the following URL."
+    link: "https://devices.droidian.org/#/devices/yggdrasilx"
+    button: true
 unlock: []
 handlers:
   bootloader_locked:
@@ -388,4 +393,110 @@ operating_systems:
         fallback:
           - core:user_action:
               action: "boot"
+    slideshow: []
+
+  - name: "Droidian"
+    compatible_installer: ">=0.9.2-beta"
+    options:
+      - var: "bootstrap"
+        name: "Bootstrap"
+        tooltip: "Flash system partitions using fastboot. Keep enabled if coming from non-Droidian OS"
+        type: "checkbox"
+        value: true
+    prerequisites: []
+    steps:
+      - actions:
+          - core:user_action:
+              action: "droidian_notice"
+      - actions:
+          - core:download:
+              group: "firmware"
+              files:
+                - url: "https://images.droidian.org/droidian/nightly/arm64/volla/image-fastboot-yggdrasilx.zip"
+          - core:unpack:
+              group: "firmware"
+              files:
+                - archive: "image-fastboot-yggdrasilx.zip"
+                  dir: "unpacked_droidian"
+
+      # Firmware setup (bootstrap)
+      - actions:
+          - core:download:
+              group: "firmware"
+              files:
+                - url: "https://volla.tech/filedump/volla-yggdrasilx-10.0-ubports-installer-bootstrap.zip"
+                  checksum:
+                    sum: "d74cbf319f9525275497a2fe3f87d657498213f903d416505b17eef47574f9f6"
+                    algorithm: "sha256"
+          - core:unpack:
+              group: "firmware"
+              files:
+                - archive: "volla-yggdrasilx-10.0-ubports-installer-bootstrap.zip"
+                  dir: "unpacked"
+        condition:
+          var: "bootstrap"
+          value: true
+      - actions:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
+          - core:user_action:
+              action: "bootloader"
+      - actions:
+          - fastboot:flash:
+              partitions:
+                - partition: "lk"
+                  file: "unpacked/lk.img"
+                  group: "firmware"
+                - partition: "lk2"
+                  file: "unpacked/lk.img"
+                  group: "firmware"
+                - partition: "logo"
+                  file: "unpacked/logo.img"
+                  group: "firmware"
+                - partition: "md1dsp"
+                  file: "unpacked/md1dsp.img"
+                  group: "firmware"
+                - partition: "md1img"
+                  file: "unpacked/md1img.img"
+                  group: "firmware"
+                - partition: "preloader"
+                  file: "unpacked/preloader.img"
+                  group: "firmware"
+                - partition: "spmfw"
+                  file: "unpacked/spmfw.img"
+                  group: "firmware"
+                - partition: "sspm_1"
+                  file: "unpacked/sspm.img"
+                  group: "firmware"
+                - partition: "sspm_2"
+                  file: "unpacked/sspm.img"
+                  group: "firmware"
+                - partition: "tee1"
+                  file: "unpacked/tee.img"
+                  group: "firmware"
+                - partition: "tee2"
+                  file: "unpacked/tee.img"
+                  group: "firmware"
+                - partition: "vendor"
+                  file: "unpacked/vendor.img"
+                  group: "firmware"
+        condition:
+          var: "bootstrap"
+          value: true
+
+      - actions:
+          - fastboot:flash:
+              partitions:
+                - partition: "dtbo"
+                  file: "unpacked_droidian/data/dtbo.img"
+                  group: "firmware"
+                - partition: "boot"
+                  file: "unpacked_droidian/data/boot.img"
+                  group: "firmware"
+                - partition: "userdata"
+                  file: "unpacked_droidian/data/userdata.img"
+                  group: "firmware"
+          - fastboot:reboot:
     slideshow: []
