@@ -5,17 +5,14 @@ aliases: []
 user_actions:
   recovery:
     title: "Reboot to Recovery"
-    description: 'With the device powered off, hold Volume Up + Power. You might be prompted to select a mode to boot into. If that happens, follow the on-screen instructions and select "Recovery" mode.'
+    description: 'With the device powered off, hold Volume Up + Power. When prompted choose a boot mode select "recovery" by following the on-screen instructions or use Volume Up/Down and confirm with Power button.'
     image: "phone_power_up"
     button: true
   bootloader:
     title: "Reboot to Bootloader"
-    description: 'With the device powered off, hold Volume Up + Power. You might be prompted to select a mode to boot into. If that happens, follow the on-screen instructions and select "Fastboot" mode.'
+    description: 'With the device powered off, hold Volume Up + Power. When prompted choose a boot mode select "fastboot" by following the on-screen instructions or use Volume Up/Down and confirm with Power button.'
     image: "phone_power_up"
     button: true
-  boot:
-    title: "Reboot the device"
-    description: "Hold down the power button until the device powers down. Then, release it briefly and hold it down again until the device boots."
   droidian_notice:
     title: "Droidian: Notice"
     description: "Installation will reflash userdata with the fresh Droidian rootfs. For additional information about the port including known issues, default passcode and recommended apps please visit the following URL."
@@ -39,7 +36,7 @@ operating_systems:
           systemimage:channels:
       - var: "wipe"
         name: "Wipe Userdata"
-        tooltip: "Wipe personal data. *Required* if switching from Volla OS."
+        tooltip: "Wipe personal data. *Required* if switching from something that isn't Ubuntu Touch."
         type: "checkbox"
       - var: "bootstrap"
         name: "Bootstrap"
@@ -53,14 +50,10 @@ operating_systems:
           - core:download:
               group: "firmware"
               files:
-                - url: "https://volla.tech/filedump/volla-mimir-13.0-ubports-installer-bootstrap.zip"
+                - url: "https://volla.tech/filedump/volla-mimir-13.0-ubports-installer-bootstrap.zip" # FIXME: update vendor.img for IMEI fix
                   checksum:
                     sum: "1d3aaa0e78834e9e6667c43c79ef748737b5264c0c6641917636240484be022c"
                     algorithm: "sha256"
-        condition:
-          var: "bootstrap"
-          value: true
-      - actions:
           - core:unpack:
               group: "firmware"
               files:
@@ -70,21 +63,21 @@ operating_systems:
           var: "bootstrap"
           value: true
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
         condition:
-          var: "bootstrap"
-          value: true
+          OR:
+            - var: "bootstrap"
+              value: true
+            - var: "wipe"
+              value: true
       - actions:
           - fastboot:set_active:
               slot: "a"
-        condition:
-          var: "bootstrap"
-          value: true
-      - actions:
           - fastboot:flash:
               partitions:
                 - partition: "preloader_a"
@@ -162,12 +155,16 @@ operating_systems:
           - core:user_action:
               action: "recovery"
         condition:
-          var: "bootstrap"
-          value: true
+          OR:
+            - var: "bootstrap"
+              value: true
+            - var: "wipe"
+              value: true
       - actions:
-          - adb:reboot:
-              to_state: "recovery"
-        fallback:
+# FIXME: bring below back once "adb reboot recovery" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "recovery"
+#        fallback:
           - core:user_action:
               action: "recovery"
         condition:
@@ -182,6 +179,7 @@ operating_systems:
           - core:user_action:
               action: "recovery"
     slideshow: []
+
   - name: "Volla OS"
     compatible_installer: ">=0.9.2-beta"
     prerequisites: []
@@ -190,7 +188,7 @@ operating_systems:
           - core:download:
               group: "firmware"
               files:
-                - url: "https://volla.tech/filedump/vollaos/volla-14.0-20250130-stable-BOOTSTRAP-mimir.zip"
+                - url: "https://volla.tech/filedump/vollaos/volla-14.0-20250130-stable-BOOTSTRAP-mimir.zip" # FIXME: update and check (flash from Droidian, then back to UT!)
                   checksum:
                     sum: "73891d2c7dd620dea44f7f3ad9ad5474cded5262470319f42349b1ee72ed1bc1"
                     algorithm: "sha256"
@@ -200,9 +198,10 @@ operating_systems:
                 - archive: "volla-14.0-20250130-stable-BOOTSTRAP-mimir.zip"
                   dir: "unpacked"
       - actions:
-          - adb:reboot:
-              to_state: "bootloader"
-        fallback:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
           - core:user_action:
               action: "bootloader"
       - actions:
@@ -272,11 +271,7 @@ operating_systems:
                   group: "firmware"
           - fastboot:erase:
               partition: "userdata"
-      - actions:
           - fastboot:reboot:
-        fallback:
-          - core:user_action:
-              action: "boot"
     slideshow: []
     eula:
       title: "EULA"
