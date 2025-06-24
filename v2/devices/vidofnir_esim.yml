@@ -20,6 +20,11 @@ user_actions:
     description: "For additional information about the Volla device ports including known issues please visit the following URL."
     link: "https://forum.sailfishos.org/t/the-single-volla-thread/22553"
     button: true
+  droidian_notice:
+    title: "Droidian: Notice"
+    description: "Installation will reflash userdata with the fresh Droidian rootfs. For additional information about the port including known issues, default passcode and recommended apps please visit the following URL."
+    link: "https://devices.droidian.org/#/devices/vidofnir"
+    button: true
 unlock: []
 handlers:
   bootloader_locked:
@@ -319,5 +324,86 @@ operating_systems:
                 - partition: "super"
                   file: "unpacked/SailfishOS-halium-vidofnir/super.img"
                   group: "SailfishOS"
+          - fastboot:reboot:
+    slideshow: []
+
+  - name: "Droidian"
+    compatible_installer: ">=0.9.2-beta"
+    options:
+      - var: "bootstrap"
+        name: "Bootstrap"
+        tooltip: "Flash system partitions using fastboot. Keep enabled if coming from non-Droidian OS"
+        type: "checkbox"
+        value: true
+    prerequisites: []
+    steps:
+      - actions:
+          - core:user_action:
+              action: "droidian_notice"
+          - core:download:
+              group: "firmware"
+              files:
+                - url: "https://images.droidian.org/droidian/nightly/arm64/volla/image-fastboot-vidofnir.zip"
+          - core:unpack:
+              group: "firmware"
+              files:
+                - archive: "image-fastboot-vidofnir.zip"
+                  dir: "unpacked_droidian"
+
+      # Firmware setup (bootstrap)
+      - actions:
+          - core:download:
+              group: "firmware"
+              files:
+                - url: "https://volla.tech/filedump/volla-vidofnir-12.0-ubports-installer-bootstrap-v3.zip"
+                  checksum:
+                    sum: "da18b5498ebae0267be894fff73bfd629be73967cf33f071d571ffc3ef46ce97"
+                    algorithm: "sha256"
+          - core:unpack:
+              group: "firmware"
+              files:
+                - archive: "volla-vidofnir-12.0-ubports-installer-bootstrap-v3.zip"
+                  dir: "unpacked"
+        condition:
+          var: "bootstrap"
+          value: true
+      - actions:
+# FIXME: bring below back once "adb reboot bootloader" doesn't hang on UT side
+#          - adb:reboot:
+#              to_state: "bootloader"
+#        fallback:
+          - core:user_action:
+              action: "bootloader"
+      - actions:
+          - fastboot:set_active:
+              slot: "a"
+          - fastboot:flash:
+              partitions:
+                - partition: "lk_a"
+                  file: "unpacked/lk.img"
+                  group: "firmware"
+                - partition: "dtbo_a"
+                  file: "unpacked/dtbo.img"
+                  group: "firmware"
+                - partition: "vbmeta_a"
+                  file: "unpacked/vbmeta.img"
+                  group: "firmware"
+                  flags: ["--disable-verity"]
+        condition:
+          var: "bootstrap"
+          value: true
+
+      - actions:
+          - fastboot:flash:
+              partitions:
+                - partition: "boot_a"
+                  file: "unpacked_droidian/data/boot.img"
+                  group: "firmware"
+                - partition: "vendor_boot_a"
+                  file: "unpacked_droidian/data/vendor_boot.img"
+                  group: "firmware"
+                - partition: "userdata"
+                  file: "unpacked_droidian/data/userdata.img"
+                  group: "firmware"
           - fastboot:reboot:
     slideshow: []
